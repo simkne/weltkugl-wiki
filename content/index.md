@@ -85,7 +85,6 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   #description  
   Longer-form thoughts, collected alongside short working notes.  
   :::  
-::  
 ::
 
 ::u-page-section
