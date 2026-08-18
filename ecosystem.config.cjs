@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'docus-wiki',
       script: '.output/server/index.mjs',
-      cwd: '/var/www/weltkugl.net/docus',
+      cwd: '/httpdocs/docus',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

@@ -18,6 +18,12 @@ logs
 .env.*
 !.env.example
 
+# SSH keys — never commit. Use GitHub Actions secret SSH_PRIVATE_KEY instead.
+simkne_github
+simkne_github.pub
+id_*
+*.pem
+
 # npm pack
 *.tgz
 

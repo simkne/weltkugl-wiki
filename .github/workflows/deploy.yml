@@ -62,11 +62,12 @@ jobs:
           chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          # .output/ is the built Nuxt server. --delete removes stale chunks;
-          # node_modules is excluded because the server installs prod deps itself.
-          rsync -avz --delete --exclude node_modules \
+          # .output/ is the built Nuxt server, including Linux-x64 node_modules
+          # (CI builds on ubuntu-latest = same arch as the server). --delete
+          # removes stale chunks.
+          rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new" \
-            ./output/ \
+            ./.output/ \
             "${SSH_USERNAME}@${SSH_HOST}:${DEPLOY_PATH}/.output/"
 
           # Version the pm2 app definition with the repo
@@ -91,8 +92,6 @@ jobs:
               -o BatchMode=yes \
               "$SSH_USERNAME@$SSH_HOST" \
               "set -e
-               cd '${DEPLOY_PATH}'
-               npm install --omit=dev --no-audit --no-fund --prefix .output/server
                if pm2 describe docus-wiki >/dev/null 2>&1; then
                  pm2 restart docus-wiki --update-env
                else
