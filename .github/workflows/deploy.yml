@@ -102,10 +102,16 @@ jobs:
               -o BatchMode=yes \
               "$SSH_USERNAME@$SSH_HOST" \
               "set -e
-               # Non-interactive SSH doesn't load shell profiles, so the npm
-               # bin dir (where pm2 lives) may be missing from PATH. Load it.
+               # Non-interactive SSH doesn't load shell profiles, so npm/node
+               # bin dirs may be missing from PATH. Load profile + locate node.
                if [ -f \"\$HOME/.profile\" ]; then . \"\$HOME/.profile\"; fi
                if [ -f \"\$HOME/.bashrc\" ]; then . \"\$HOME/.bashrc\"; fi
+               NODE_BIN=\"\$(dirname \"\$(command -v node 2>/dev/null || true)\" 2>/dev/null || true)\"
+               for cand in /usr/local/bin /usr/bin /opt/nodejs/bin /opt/node/bin; do
+                 if [ -x \"\$cand/node\" ]; then NODE_BIN=\"\$cand\"; break; fi
+               done
+               if [ -n \"\$NODE_BIN\" ]; then export PATH=\"\$NODE_BIN:\$PATH\"; fi
+               echo \"node: \$(command -v node || echo 'NOT FOUND')\"
                PM2=\"\$(command -v pm2 || true)\"
                if [ -z \"\$PM2\" ]; then
                  # Local install inside the app (npm i pm2, no -g)

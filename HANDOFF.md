@@ -1,6 +1,6 @@
 # Handoff — weltkugl.net wiki (Docus)
 
-Date: 2026-08-18
+Date: 2026-08-18 (updated after deployment work)
 
 Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
 
@@ -8,8 +8,17 @@ Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
 
 - **Production build**: works. `NUXT_SITE_URL=https://weltkugl.net pnpm build`
 - **Dev server**: works on `http://localhost:3000/docus/` (fallback port 3001/3002 if 3000 is taken). Requires the Vite plugin workaround in `nuxt.config.ts` (see below).
-- **Git**: repo exists but has **no commits yet**. Everything is staged (`A`) or untracked (`??`). First commit is still pending.
-- **Deployment**: designed but NOT yet run. GitHub Actions workflow + pm2 config + Apache proxy are written and in the repo.
+- **Git**: committed and pushed to `github.com:simkne/weltkugl-wiki.git`, branch `main`. Working tree clean.
+- **Deployment**: **LIVE.** `https://www.weltkugl.net/docus/` returns 200; content pages, `/llms.txt`, and `/docus/welkugl_logo.png` all serve correctly. Managed by **Plesk Node.js** (not pm2-over-SSH — see below).
+
+## Deployment — HOW IT ACTUALLY RUNS (final, verified)
+
+**Key insight: this is Plesk hosting. The app is started by Plesk's Node.js manager, NOT by the SSH/pm2 workflow.**
+
+- Plesk Node.js app: root = `httpdocs`, startup file = the app's server entry (`docus/.output/server/index.mjs` — the exact startup path was wrong and caused a 500; fixing it in Plesk made it work).
+- Node/nodenv live at the **host** (`/opt/plesk/node`, linked from `/.nodenv/versions`) — **not reachable from the SSH chroot**. SSH users physically cannot run `node`/`npm`/`pm2`. Do not debug "node not found" over SSH; the process runs under Plesk.
+- pm2 installed locally at `/weltkugl.net/node_modules/.bin/pm2` but is NOT what serves the app. The GitHub Actions "Restart" step's pm2 lookup is moot under Plesk.
+- Apache/Plesk handle routing; the `.htaccess` at httpdocs root still has stale lines from the old Astro site (e.g. `ErrorDocument 404 /www/404.html`) — clean up when convenient.
 
 ## Key facts to preserve
 
@@ -20,6 +29,34 @@ Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
 - `llms.domain` **does** include the path: `https://weltkugl.net/docus`.
 - `robots.robotsTxt: false` — robots.txt must live at the domain root, so it's added manually on the server, not generated under `/docus/`.
 - `NUXT_SITE_URL` env at build time = `https://weltkugl.net` (domain only).
+
+### Server layout (Netcup, important!)
+
+The SSH user is **chrooted**: the server's real absolute path
+`/var/www/vhosts/hosting186292.a2e5e.netcup.net/` appears as **`/`** in the SSH shell.
+
+- Server hostname: `hosting186292.a2e5e.netcup.net` (= IP `91.204.46.94`)
+- `DEPLOY_PATH` secret = **`/weltkugl.net/httpdocs/docus`** (chroot-relative!)
+- pm2 lives at **`/weltkugl.net/node_modules/.bin/pm2`** (installed at the vhost root, one level above the app — NOT global, NOT inside the app)
+- Files are deployed into `/weltkugl.net/httpdocs/docus/.output/` + `ecosystem.config.cjs` alongside it.
+- WARNING: an earlier typo deployed files into `/weltkugl.net/httpdocs/docu` (missing `s`). If it still exists, remove it: `rm -rf /weltkugl.net/httpdocs/docu`.
+
+### GitHub Secrets (all set)
+
+- `SSH_HOST` = `hosting186292.a2e5e.netcup.net`
+- `SSH_USERNAME` = the web/SSH user the deploy key authenticates as
+- `SSH_PRIVATE_KEY` = private key `~/.ssh/docus_deploy` on the Mac (public key registered in the server's `authorized_keys`; comment `github-actions-docus-deploy`)
+- `DEPLOY_PATH` = `/weltkugl.net/httpdocs/docus`
+
+### Deployment pipeline (GitHub Actions → Netcup)
+
+- `.github/workflows/deploy.yml`:
+  1. `pnpm install --frozen-lockfile` + `pnpm build` (Linux x64, `NUXT_SITE_URL=https://weltkugl.net`) — **the built `node_modules` is included**; no server-side install needed, and a Mac build must NOT be uploaded (ships `@img/sharp-darwin-arm64` which won't run on Linux).
+  2. **Backup**: inlined in the workflow (no server script). Tars current `.output/` to `backups/backup-<ts>.tar.gz`, keeps last 5. First deploy skips.
+  3. **Deploy**: `tar | ssh` stream (no rsync required on the server — though rsync IS now installed there). Clears `.output/` first (no stale chunks). Also ships `ecosystem.config.cjs`.
+  4. **Restart**: loads shell profile, finds pm2 (PATH → app → vhost-root → npm global), `pm2 start/restart docus-wiki`. **Moot under Plesk** — Plesk manages the process itself; the step is harmless but does not control the running app.
+- `ecosystem.config.cjs` — app `docus-wiki`, `cwd: '/weltkugl.net/httpdocs/docus'`, `HOST=127.0.0.1`, `PORT=3001`, fork mode. **Only used if running pm2 manually; Plesk does not use it.**
+- The actual running app is configured in the **Plesk panel** (Node.js section for weltkugl.net): root = `httpdocs`, startup file = `docus/.output/server/index.mjs`.
 
 ### Sitemap — OPEN ISSUE (not fixed)
 
@@ -34,14 +71,14 @@ Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
 - **Symptom**: dev console error `Uncaught ReferenceError: Cannot access 'hmrClient' before initialization` at `createHotContext` → breaks ALL client JS (no sidebar, no search, dead mobile menu).
 - **Root cause**: Nuxt 4.5.2 framework bug. `@vite/client` imports `nuxt/app/compat/interval.js` → imports the diagnostics chain → `nostics` dev reporter calls `createHotContext()` at module top-level before `client.mjs` has initialized `hmrClient`. Circular-import dead zone.
 - **Fix**: Vite plugin `strip-nostics-dev-hmr-hookup` in `nuxt.config.ts`. It replaces `import.meta.hot` with `undefined` in the nostics dev reporter module, so Vite's import-analysis skips injecting the top-level `createHotContext()` call. The reporter is best-effort only and no-ops gracefully.
-- **Do NOT**: remove `optimizeDeps.exclude` hack (it did nothing) — actually reverted, not present. Do NOT pin Nuxt ≤ 4.4.8 to "fix" this: that regresses to Vite 7/Rollup which fails the build on `node-mock-http`'s minified file (`Identifier "h" has already been declared` in `nodeless.mjs`). Stay on Nuxt 4.5.2 + Vite 8 (Rolldown).
+- **Do NOT** pin Nuxt ≤ 4.4.8 to "fix" this: that regresses to Vite 7/Rollup which fails the build on `node-mock-http`'s minified file (`Identifier "h" has already been declared` in `nodeless.mjs`). Stay on Nuxt 4.5.2 + Vite 8 (Rolldown).
 - **DO NOT regenerate `pnpm-lock.yaml`** casually. Deleting it and reinstalling drifts Vite 8 → Vite 7/Rollup and breaks builds. If deps must change, use `pnpm add`/`pnpm update` which keep the lockfile's Vite 8 resolution.
 
 ### Versions that work (current, verified)
 
 - nuxt `4.5.2` (Vite 8.2.1 / Rolldown) — installed & lockfile-pinned
 - docus `^5.12.3` (never bump to 7.x — doesn't exist)
-- `package.json` declares `"nuxt": "^4.5.2"`
+- `package.json` declares `"nuxt": "^4.5.2"` and `"packageManager": "pnpm@10.18.2"`
 
 ## Content
 
@@ -55,23 +92,18 @@ Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
   - `4.sensors/1.overview.md`
 - All routes verified returning 200 in production preview.
 
-## Deployment pipeline (ready, untested in production)
-
-- `.github/workflows/deploy.yml` — build (`ubuntu-latest`), backup, rsync `.output/`, pm2 restart. Install/build correctly use `pnpm install --frozen-lockfile` + `pnpm build`; the `npm install --omit=dev --prefix .output/server` step is the standard Nitro prod-deps install (correct, not a mistake).
-- `ecosystem.config.cjs` — app `docus-wiki`, cwd `/var/www/weltkugl.net/docus`, `HOST=127.0.0.1`, `PORT=3001`.
-- Apache reverse-proxies `/docus/` → `127.0.0.1:3001` (`mod_proxy`). Guide documents the exact config.
-- GitHub Secrets required: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH` (`/var/www/weltkugl.net/docus`).
-
 ## Also in repo
 
-- `public/welkugl_logo.png` — untracked, byte-identical to `favicon.ico`. Decision pending: use as logo/branding or remove.
-- `AGENTS.md` — conventions for AI agents (read before working; the `hmrClient` workaround should be added to it).
+- `app.config.ts` — Docus theming: `header.logo` points at `/docus/welkugl_logo.png` (both light/dark), `header.title: 'weltkugl'`. **Logo not yet visually confirmed in the header** — check whether it renders after the dev-server/config issue (the earlier "can't see a change" was a wrong-port confusion; verify again).
+- `public/welkugl_logo.png` — 480×480 PNG, committed. Used as the header logo.
+- `AGENTS.md` — conventions for AI agents. **TODO: add the `hmrClient` workaround + server layout notes so future sessions don't break/rediscover them.**
+- `HANDOFF.md` — this file.
 - `.gitignore` — ignores `.output`, `.nuxt`, `.data`, `node_modules`, env files, agent tooling dirs.
 
 ## Next steps (in order)
 
-1. **Add the `hmrClient` workaround note to AGENTS.md** so future sessions don't remove it.
-2. **Decide on `welkugl_logo.png`** (keep as branding or delete).
-3. **Make the first commit** (all current work is uncommitted). Check `git status`/`git diff` first, stage intentionally, keep commits small.
-4. **First deployment** to Netcup; test `/docus/` through Apache; add robots.txt at domain root.
-5. Revisit the sitemap `/docus/` prefix issue if it matters after deployment.
+1. **Confirm the live wiki fully works** (nav, search, dark mode, logo) at `https://www.weltkugl.net/docus/` — the earlier logo config (`app.config.ts`) was never visually verified; check it renders.
+2. **Clean up the stale `.htaccess`** at httpdocs root (old Astro lines: `ErrorDocument 404 /www/404.html`, instantindexer bits).
+3. **Remove the leftover typo folder** `/weltkugl.net/httpdocs/docu` on the server if it still exists.
+4. **Add the `hmrClient` workaround + Plesk server layout to AGENTS.md** so future sessions don't remove/rediscover them.
+5. Revisit the sitemap `/docus/` prefix issue if it matters (SEO).
