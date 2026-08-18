@@ -39,6 +39,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_deploy
@@ -48,7 +49,16 @@ jobs:
               -o StrictHostKeyChecking=accept-new \
               -o BatchMode=yes \
               "$SSH_USERNAME@$SSH_HOST" \
-              "bash \$HOME/scripts/backup-docus.sh"
+              "set -e
+               if [ -d '${DEPLOY_PATH}/.output' ]; then
+                 mkdir -p '${DEPLOY_PATH}/backups'
+                 ts=\$(date +%Y%m%d-%H%M%S)
+                 tar czf '${DEPLOY_PATH}/backups/backup-\$ts.tar.gz' -C '${DEPLOY_PATH}' .output
+                 echo \"Backup created: backups/backup-\$ts.tar.gz\"
+                 ls -1t '${DEPLOY_PATH}/backups' | tail -n +6 | xargs -r rm -f
+               else
+                 echo 'No existing .output to back up (first deploy) — skipping.'
+               fi"
 
       - name: Deploy to Netcup server
         env:
