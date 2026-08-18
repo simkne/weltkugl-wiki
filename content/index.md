@@ -11,6 +11,8 @@ and build logs for the portal, the blog, and everything else under the dome.
 #title
 hi.
 
+#description
+
 welcome to the [weltkugl]{.text-primary} wiki
 
 #description
