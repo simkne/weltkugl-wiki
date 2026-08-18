@@ -102,9 +102,20 @@ jobs:
               -o BatchMode=yes \
               "$SSH_USERNAME@$SSH_HOST" \
               "set -e
-               if pm2 describe docus-wiki >/dev/null 2>&1; then
-                 pm2 restart docus-wiki --update-env
+               # Non-interactive SSH doesn't load shell profiles, so the npm
+               # bin dir (where pm2 lives) may be missing from PATH. Load it.
+               if [ -f \"\$HOME/.profile\" ]; then . \"\$HOME/.profile\"; fi
+               if [ -f \"\$HOME/.bashrc\" ]; then . \"\$HOME/.bashrc\"; fi
+               PM2=\"\$(command -v pm2 || true)\"
+               if [ -z \"\$PM2\" ]; then
+                 # Fall back to the npm global bin if still not found
+                 NPMBIN=\"\$(npm config get prefix 2>/dev/null)/bin\"
+                 PM2=\"\$NPMBIN/pm2\"
+               fi
+               echo \"Using pm2: \$PM2\"
+               if \"\$PM2\" describe docus-wiki >/dev/null 2>&1; then
+                 \"\$PM2\" restart docus-wiki --update-env
                else
-                 pm2 start ecosystem.config.cjs --only docus-wiki
-                 pm2 save
+                 \"\$PM2\" start ecosystem.config.cjs --only docus-wiki
+                 \"\$PM2\" save
                fi"
