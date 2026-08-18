@@ -1,5 +1,6 @@
 {
   "name": "docus",
+  "packageManager": "pnpm@10.18.2",
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build"
