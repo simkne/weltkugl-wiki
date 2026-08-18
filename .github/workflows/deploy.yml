@@ -108,9 +108,14 @@ jobs:
                if [ -f \"\$HOME/.bashrc\" ]; then . \"\$HOME/.bashrc\"; fi
                PM2=\"\$(command -v pm2 || true)\"
                if [ -z \"\$PM2\" ]; then
-                 # Fall back to the npm global bin if still not found
-                 NPMBIN=\"\$(npm config get prefix 2>/dev/null)/bin\"
-                 PM2=\"\$NPMBIN/pm2\"
+                 # Local install inside the app (npm i pm2, no -g)
+                 if [ -x '${DEPLOY_PATH}/node_modules/.bin/pm2' ]; then
+                   PM2='${DEPLOY_PATH}/node_modules/.bin/pm2'
+                 else
+                   # Fall back to the npm global bin
+                   NPMBIN=\"\$(npm config get prefix 2>/dev/null)/bin\"
+                   PM2=\"\$NPMBIN/pm2\"
+                 fi
                fi
                echo \"Using pm2: \$PM2\"
                if \"\$PM2\" describe docus-wiki >/dev/null 2>&1; then
