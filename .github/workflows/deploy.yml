@@ -111,6 +111,9 @@ jobs:
                  # Local install inside the app (npm i pm2, no -g)
                  if [ -x '${DEPLOY_PATH}/node_modules/.bin/pm2' ]; then
                    PM2='${DEPLOY_PATH}/node_modules/.bin/pm2'
+                 elif [ -x '${DEPLOY_PATH%/*/*}/node_modules/.bin/pm2' ]; then
+                   # Installed one level above the app (e.g. at the vhost root)
+                   PM2='${DEPLOY_PATH%/*/*}/node_modules/.bin/pm2'
                  else
                    # Fall back to the npm global bin
                    NPMBIN=\"\$(npm config get prefix 2>/dev/null)/bin\"
