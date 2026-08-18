@@ -1,6 +1,6 @@
 # Handoff — weltkugl.net wiki (Docus)
 
-Date: 2026-08-18 (updated after deployment work)
+Date: 2026-08-18 (end of session)
 
 Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
 
@@ -9,15 +9,16 @@ Handoff for continuing work on the Docus wiki at `https://weltkugl.net/docus/`.
 - **Production build**: works. `NUXT_SITE_URL=https://weltkugl.net pnpm build`
 - **Dev server**: works on `http://localhost:3000/docus/` (fallback port 3001/3002 if 3000 is taken). Requires the Vite plugin workaround in `nuxt.config.ts` (see below).
 - **Git**: committed and pushed to `github.com:simkne/weltkugl-wiki.git`, branch `main`. Working tree clean.
-- **Deployment**: **LIVE.** `https://www.weltkugl.net/docus/` returns 200; content pages, `/llms.txt`, and `/docus/welkugl_logo.png` all serve correctly. Managed by **Plesk Node.js** (not pm2-over-SSH — see below).
+- **Deployment**: **LIVE and verified.** `https://www.weltkugl.net/docus/` returns 200; content pages, `/llms.txt`, and `/docus/welkugl_logo.png` all serve correctly. Landing page renders correctly (content + styling). Managed by **Plesk Node.js** (not pm2-over-SSH — see below).
 
 ## Deployment — HOW IT ACTUALLY RUNS (final, verified)
 
 **Key insight: this is Plesk hosting. The app is started by Plesk's Node.js manager, NOT by the SSH/pm2 workflow.**
 
 - Plesk Node.js app: root = `httpdocs`, startup file = the app's server entry (`docus/.output/server/index.mjs` — the exact startup path was wrong and caused a 500; fixing it in Plesk made it work).
+- **After each deploy, the app must be restarted in Plesk** (Node.js section → Restart). It does NOT auto-reload reliably; a stale process keeps serving old code until restarted. There is no known way to trigger the restart from SSH (chroot can't reach the process, no `plesk` CLI, no `.restart`-file trigger found).
 - Node/nodenv live at the **host** (`/opt/plesk/node`, linked from `/.nodenv/versions`) — **not reachable from the SSH chroot**. SSH users physically cannot run `node`/`npm`/`pm2`. Do not debug "node not found" over SSH; the process runs under Plesk.
-- pm2 installed locally at `/weltkugl.net/node_modules/.bin/pm2` but is NOT what serves the app. The GitHub Actions "Restart" step's pm2 lookup is moot under Plesk.
+- pm2 installed locally at `/weltkugl.net/node_modules/.bin/pm2` but is NOT what serves the app. The GitHub Actions "Restart" step's pm2 lookup is moot under Plesk (it will fail; harmless).
 - Apache/Plesk handle routing; the `.htaccess` at httpdocs root still has stale lines from the old Astro site (e.g. `ErrorDocument 404 /www/404.html`) — clean up when convenient.
 
 ## Key facts to preserve
@@ -82,7 +83,7 @@ The SSH user is **chrooted**: the server's real absolute path
 
 ## Content
 
-- `content/index.md` — landing page (rewritten for the wiki concept).
+- `content/index.md` — landing page (rewritten for the wiki concept). **MDC syntax was fixed this session**: component props must be wrapped in `---` YAML blocks inside `:::u-*` components (bare `icon:`/`color:` lines render as raw text), and nested blocks must use plain indentation, NOT `##`-prefixed lines. Verified rendering correctly live.
 - `content/1.hosting/1.deploy-first-node-app-to-netcup.md` — full deployment guide used as the reference article.
 - `content/2.projects/1.iot/` — IoT knowledge base migrated from `astrovite/src/content/iot/`:
   - `1.overview.md` → `/projects/iot/overview`
@@ -94,16 +95,17 @@ The SSH user is **chrooted**: the server's real absolute path
 
 ## Also in repo
 
-- `app.config.ts` — Docus theming: `header.logo` points at `/docus/welkugl_logo.png` (both light/dark), `header.title: 'weltkugl'`. **Logo not yet visually confirmed in the header** — check whether it renders after the dev-server/config issue (the earlier "can't see a change" was a wrong-port confusion; verify again).
+- `app.config.ts` — Docus theming: `header.logo` points at `/docus/welkugl_logo.png` (both light/dark), `header.title: 'weltkugl'`. Logo asset serves correctly live; **visual confirmation in the header still open** (confirm next session).
 - `public/welkugl_logo.png` — 480×480 PNG, committed. Used as the header logo.
-- `AGENTS.md` — conventions for AI agents. **TODO: add the `hmrClient` workaround + server layout notes so future sessions don't break/rediscover them.**
+- `AGENTS.md` — conventions for AI agents. **TODO: add the `hmrClient` workaround, the Plesk server layout, and the MDC-prop gotcha so future sessions don't break/rediscover them.**
 - `HANDOFF.md` — this file.
 - `.gitignore` — ignores `.output`, `.nuxt`, `.data`, `node_modules`, env files, agent tooling dirs.
 
 ## Next steps (in order)
 
-1. **Confirm the live wiki fully works** (nav, search, dark mode, logo) at `https://www.weltkugl.net/docus/` — the earlier logo config (`app.config.ts`) was never visually verified; check it renders.
-2. **Clean up the stale `.htaccess`** at httpdocs root (old Astro lines: `ErrorDocument 404 /www/404.html`, instantindexer bits).
-3. **Remove the leftover typo folder** `/weltkugl.net/httpdocs/docu` on the server if it still exists.
-4. **Add the `hmrClient` workaround + Plesk server layout to AGENTS.md** so future sessions don't remove/rediscover them.
-5. Revisit the sitemap `/docus/` prefix issue if it matters (SEO).
+1. **Restart workflow automation**: after each push, the app must be restarted in Plesk. Explore: (a) Netcup CCP node restart, (b) a way to have the GH workflow hit a Plesk-triggered reload, or (c) accept manual restart in Plesk after each deploy.
+2. **Confirm the header logo** renders visually at `https://www.weltkugl.net/docus/`; adjust `app.config.ts` if not.
+3. **Add the `hmrClient` workaround, Plesk server layout, and MDC-prop gotcha to AGENTS.md** so future sessions don't remove/rediscover them.
+4. **Clean up the stale `.htaccess`** at httpdocs root (old Astro lines: `ErrorDocument 404 /www/404.html`, instantindexer bits).
+5. **Remove the leftover typo folder** `/weltkugl.net/httpdocs/docu` on the server if it still exists.
+6. Revisit the sitemap `/docus/` prefix issue if it matters (SEO).
