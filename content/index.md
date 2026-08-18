@@ -12,19 +12,16 @@ and build logs for the portal, the blog, and everything else under the dome.
 hi.
 
 #description
-
 welcome to the [weltkugl]{.text-primary} wiki
 
-#description
 The personal knowledge base orbiting [weltkugl.net](https://weltkugl.net) — a collection of projects and resources that are useful to me. Notepad first, publish second.
 
 If it was tricky to figure out, it gets written down here.
 
 #links
 
-##   :::u-button
-
-##   color: neutral
+  :::u-button
+  color: neutral
   icon: i-lucide-globe
   size: xl
   target: _blank
@@ -44,9 +41,8 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
 
 #features
 
-##   :::u-page-feature
-
-##   icon: i-lucide-circuit-board
+  :::u-page-feature
+  icon: i-lucide-circuit-board
 
   #title
   IoT & [home automation]{.text-primary}
@@ -55,9 +51,8 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   ESP32 firmware, openHAB rules and items, sensors, and device monitoring — the connected things under the dome.
   :::
 
-##   :::u-page-feature
-
-##   icon: i-lucide-code-2
+  :::u-page-feature
+  icon: i-lucide-code-2
 
   #title
   [Web development]{.text-primary}
@@ -66,9 +61,8 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   Patterns, tooling and experiments from building the weltkugl family itself — Vue, Nuxt, Astro, and the rest.
   :::
 
-##   :::u-page-feature
-
-##   icon: i-lucide-layers
+  :::u-page-feature
+  icon: i-lucide-layers
 
   #title
   [Software architecture]{.text-primary}
@@ -77,9 +71,8 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   Notes, trade-offs and practical write-ups about how the projects are put together and why.
   :::
 
-##   :::u-page-feature
-
-##   icon: i-lucide-mic
+  :::u-page-feature
+  icon: i-lucide-mic
 
   #title
   [Blog & notes]{.text-primary}
@@ -98,9 +91,8 @@ weltkugl.net is a small personal universe of web projects. This wiki keeps their
 
 #features
 
-##   :::u-page-feature
-
-##   icon: i-lucide-globe
+  :::u-page-feature
+  icon: i-lucide-globe
   target: _blank
   to: [https://weltkugl.net](https://weltkugl.net)
 
@@ -111,9 +103,8 @@ weltkugl.net is a small personal universe of web projects. This wiki keeps their
   The front page of weltkugl.net. A dot pops out of the *hi*, flies to the corner and becomes a pair of blinking eyes. Built with Vue 3 + Vite (Vitesse), vite-ssg, UnoCSS and Motion for Vue.
   :::
 
-##   :::u-page-feature
-
-##   icon: i-lucide-pen-line
+  :::u-page-feature
+  icon: i-lucide-pen-line
 
   #title
   The [blog]{.text-primary}
@@ -122,9 +113,8 @@ weltkugl.net is a small personal universe of web projects. This wiki keeps their
   Long-form writing, built with Astro on the Vitesse stack. Shares fonts (Inter / DM Mono), UnoCSS shortcuts and lint setup with the portal — one design language across the dome.
   :::
 
-##   :::u-page-feature
-
-##   icon: i-lucide-book-open
+  :::u-page-feature
+  icon: i-lucide-book-open
 
   #title
   This [wiki]{.text-primary}
