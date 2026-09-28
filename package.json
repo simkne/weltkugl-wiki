@@ -34,5 +34,10 @@
     "pinia": "^4.0.3",
     "vue": "^3.5.41",
     "vue-final-modal": "^4.5.5"
-  }
+  },
+  "version": "1.0.0",
+  "description": "Personal wiki and knowledge base for [weltkugl.net](https://weltkugl.net), served at `https://weltkugl.net/docus/`.",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC"
 }
