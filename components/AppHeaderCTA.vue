@@ -1,0 +1,10 @@
+<template>
+  <UButton
+    to="https://weltkugl.net/"
+    icon="i-lucide-globe"
+    color="neutral"
+    variant="ghost"
+    aria-label="weltkugl.net"
+    title="weltkugl.net"
+  />
+</template>

@@ -1,13 +1,10 @@
 export default defineAppConfig({
-  docus: {
-    title: 'docus',
-    header: {
-      title: 'weltkugl',
-      logo: {
-        light: '/docus/welkugl_logo.png',
-        dark: '/docus/welkugl_logo.png',
-        alt: 'weltkugl.net logo',
-      },
+  header: {
+    title: 'weltkugl',
+    logo: {
+      light: '/docus/wiki-logo-light.png',
+      dark: '/docus/wiki-logo-dark.png',
+      alt: 'weltkugl wiki logo',
     },
   },
 })
