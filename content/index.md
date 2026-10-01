@@ -14,24 +14,12 @@ hi.
 #description
 welcome to the [weltkugl]{.text-primary} wiki
 
-The personal knowledge base orbiting [weltkugl.net](https://weltkugl.net) — a collection of projects and resources that are useful to me. Notepad first, publish second.
+The personal knowledge base orbiting [weltkugl.net](https://weltkugl.net)
+a collection of projects and resources that are useful to me. 
+Notepad first, publish second.
 
 If it was tricky to figure out, it gets written down here.
 
-#links
-
-  :::u-button
-  ---
-  color: neutral
-  icon: i-lucide-globe
-  size: xl
-  target: _blank
-  to: https://weltkugl.net
-  variant: outline
-  ---
-
-  Visit weltkugl.net
-  :::
 ::
 
 ::u-page-section
@@ -46,6 +34,7 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   :::u-page-feature
   ---
   icon: i-lucide-circuit-board
+  to: ./iot/overview
   ---
 
   #title
@@ -58,6 +47,7 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   :::u-page-feature
   ---
   icon: i-lucide-code-2
+  to: ./web-development/deploy-first-node-app-to-netcup
   ---
 
   #title
@@ -79,17 +69,6 @@ This wiki is a notepad that happens to be online. Notes live next to the code an
   Notes, trade-offs and practical write-ups about how the projects are put together and why.
   :::
 
-  :::u-page-feature
-  ---
-  icon: i-lucide-mic
-  ---
-
-  #title
-  [Blog & notes]{.text-primary}
-
-  #description
-  Longer-form thoughts, collected alongside short working notes.
-  :::
 ::
 
 ::u-page-section
@@ -118,6 +97,8 @@ weltkugl.net is a small personal universe of web projects. This wiki keeps their
   :::u-page-feature
   ---
   icon: i-lucide-pen-line
+  target: _blank
+  to: https://weltkugl.net/www/
   ---
 
   #title
@@ -138,12 +119,18 @@ weltkugl.net is a small personal universe of web projects. This wiki keeps their
   #description
   Docus on Nuxt 4, fed by plain Markdown files. Nuxt Content provides the MDC component syntax, Nuxt UI the looks — structure, routing, search and dark mode come for free.
   :::
-::
 
-::u-page-section
-#title
-From the old wiki
+  :::u-button
+  ---
+  color: neutral
+  icon: i-lucide-globe  
+  size: xl
+  target: _blank
+  to: https://weltkugl.net
+  variant: outline
+  ---
 
-#description
-This Docus wiki succeeds the Astro wiki that lived at `weltkugl.net/www/`. The notes and build logs move over section by section — IoT, web development, architecture — now served under `weltkugl.net/docus/`.
-::
+  Visit weltkugl.net
+  :::
+
+
